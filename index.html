@@ -19,7 +19,7 @@ html,body{min-height:100%}.w{max-width:1000px;margin:auto;padding:0 18px}.hero .
 .c{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin-top:16px}.c h2{margin:0 0 12px;font-size:15px;color:var(--g)}
 .drop{border:2px dashed var(--line);border-radius:14px;padding:28px;text-align:center;cursor:pointer;color:var(--mut);transition:.2s}.drop:hover,.drop.on{border-color:var(--g2);color:var(--ink)}
 .st{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:14px}.st div{padding:8px 12px;border:1px solid var(--line);border-radius:10px;font-size:13px}.st .ok{border-color:var(--g2)}.st .ok b{color:var(--g2)}
-label{display:block;font-size:12px;color:var(--mut);margin:10px 0 4px}input[type=text]{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;direction:ltr;text-align:start}
+label{display:block;font-size:12px;color:var(--mut);margin:10px 0 4px}input[type=text],input[type=date]{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;direction:ltr;text-align:start}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 button.p,button.s{font:inherit;font-weight:700;border-radius:10px;padding:10px 18px;cursor:pointer;border:1px solid var(--g2)}button.p{background:var(--g2);color:#fff}button.s{background:none;color:var(--g);padding:5px 12px;font-size:12px}button:disabled{opacity:.4;cursor:not-allowed}
 .ar{display:flex;justify-content:space-between;align-items:center;margin:22px 0 6px;font-size:14px;font-weight:700;color:var(--g)}.ar small{color:var(--mut);font-weight:500}
@@ -40,7 +40,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td{padding:8px 6px;bord
 <div class="drop" id="dz">اسحب الملفات هنا أو اضغط للاختيار<br><small>Contracts Summary · Cum Planned ERP · Updated Planned Site input · data.csv</small></div>
 <input type="file" id="fi" multiple accept=".xlsx,.xls,.csv" hidden><div class="st" id="st"></div>
 <p id="msg">الملفات بتتعالج على جهازك فقط ولا بتترفع لأي مكان. ملفات Revenue Update وRevenue Period Data مش مطلوبة.</p></div>
-<div class="c"><h2>2 · الإعدادات</h2><div class="g2"><div><label>الفترة اللي تظهر في التقرير (مثال: Oct 2026)</label><input type="text" id="upd" placeholder="SEP 2026"></div>
+<div class="c"><h2>2 · الإعدادات</h2><div class="g2"><div><label>تاريخ التقرير (لو سبته فاضي هيستخدم آخر يوم في شهر البيانات، مثال: 30-Sep-2026)</label><input type="date" id="upd"></div>
 <div><label>رابط الاستضافة (اختياري، لتوليد الروابط في ملف links.csv)</label><input type="text" id="base" placeholder="https://your-site.com/reports/"></div></div>
 <p style="margin:16px 0 0"><button class="p" id="go" disabled>توليد التقارير</button></p></div>
 <div id="res"></div></div></main>
@@ -91,13 +91,16 @@ function compute(){const mon={},area={};let last='';
  return{rows,last}}
 function page(r,upd,last){const vr=r.pa-r.pp,rp=r.pp?r.pa/r.pp*100:0,[y,m]=last.split('-').map(Number),TD=Date.UTC(y,m,0);
  let tp=0;const s=Date.parse(r.start),e=Date.parse(r.end);if(s&&e>s)tp=Math.min(Math.max((TD-s)/(e-s),0),1)*100;const rv=r.cv?Math.min(r.act/r.cv*100,100):0,red='--red',gr='--g2';
- const d={BASECSS:CSS,LOGO,UPD:upd,PERAR:upd,NAME:esc(r.name),PID:r.id,AREA:r.area,CV:M(r.cv),START:dt(r.start),END:dt(r.end),XEND:dt(r.xend),TP:tp.toFixed(0),RV:rv.toFixed(0),PA:M(r.pa),PP:M(r.pp),VAR:M(vr),VCL:vr<0?red:gr,VPCT:r.pp?(vr/r.pp*100>=0?'+':'')+(vr/r.pp*100).toFixed(1)+'%':'—',VARR:vr<0?'▼':'▲',
+ const d={BASECSS:CSS,LOGO,UPD:upd,PERAR:MN[m-1]+' '+y,NAME:esc(r.name),PID:r.id,AREA:r.area,CV:M(r.cv),START:dt(r.start),END:dt(r.end),XEND:dt(r.xend),TP:tp.toFixed(0),RV:rv.toFixed(0),PA:M(r.pa),PP:M(r.pp),VAR:M(vr),VCL:vr<0?red:gr,VPCT:r.pp?(vr/r.pp*100>=0?'+':'')+(vr/r.pp*100).toFixed(1)+'%':'—',VARR:vr<0?'▼':'▲',
   CUM:hbar([['الفعلي حتى تاريخه',r.act,'--g2'],['المخطط حتى تاريخه',r.plan,'--gold']]),CUMV:M(r.act-r.plan),CUMCL:r.act<r.plan?red:gr,FG:M(r.fcst-r.fplan),FGCL:r.fcst<r.fplan?red:gr,
   FB:hbar([['المخطط المحدث للسنة',r.fplan,'--gold'],['المتوقع للسنة',r.fcst,'--g2']]),RKP:r.rp,RKC:r.rc,RN:r.n,DONUT:donut(r.act,r.cv),REM:M(Math.max(r.cv-r.act,0)),ACT:M(r.act),TREND:trend(r.ser),GP:gauge(rp),RPIC:r.cumpct.toFixed(1)+'%',RPIPH:(rp/100).toFixed(2)};
  return T.replace(/\{\{(\w+)\}\}/g,(_,k)=>d[k]??'')}
 const hex=()=>[...crypto.getRandomValues(new Uint8Array(4))].map(b=>b.toString(16).padStart(2,'0')).join('');
+const MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fd=v=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(v||'');return m?m[3]+'-'+MO[+m[2]-1]+'-'+m[1]:String(v||'').trim()};
+const ld=l=>{const [y,m]=l.split('-').map(Number);return l+'-'+String(new Date(Date.UTC(y,m,0)).getUTCDate()).padStart(2,'0')};
 const MN=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-$('#go').onclick=()=>{try{const {rows,last}=compute(),upd=$('#upd').value.trim()||MN[+last.slice(5)-1]+' '+last.slice(0,4),base=$('#base').value.trim().replace(/\/?$/,'/');
+$('#go').onclick=()=>{try{const {rows,last}=compute(),upd=fd($('#upd').value)||fd(ld(last)),base=$('#base').value.trim().replace(/\/?$/,'/');
  const zip=new JSZip(),f=zip.folder('project_reports');let csv='\ufeffProject,Name,Area,File,Link\n';OUT={};
  rows.forEach(r=>{const fn=`${r.id}_${hex()}.html`;r.fn=fn;r.html=page(r,upd,last);f.file(fn,r.html);csv+=`${r.id},"${String(r.name).replace(/"/g,'""')}",${r.area},${fn},${$('#base').value.trim()?base+fn:''}\n`});
  f.file('links.csv',csv);OUT={rows,zip,upd,last};
